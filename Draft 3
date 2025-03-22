@@ -7,17 +7,17 @@ import csv
 # Initialize pygame
 pygame.init()
 
-# Set up windowed mode (800x600 resolution)
-WIDTH, HEIGHT = 800, 600
-win = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+# Set up full window mode
+WIDTH, HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
+win = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("Stroop Task")
 
-# Define colors
+# Define colors (Lemon Yellow for Better Contrast)
 COLORS = {
     "RED": (255, 0, 0),
-    "GREEN": (0, 255, 0),
+    "GREEN": (0, 200, 0),
     "BLUE": (0, 0, 255),
-    "YELLOW": (255, 255, 0)
+    "YELLOW": (255, 244, 79)  # Lemon Yellow for bright contrast
 }
 
 # Define keys for responses
@@ -42,7 +42,7 @@ def quit_game():
 
 # Quit confirmation screen
 def confirm_exit():
-    win.fill((255, 255, 255))
+    win.fill((255, 255, 255))  # White background instead of black
     exit_text = title_font.render("Are you sure you want to exit?", True, (255, 0, 0))
     small_text = small_font.render("Press Y to exit, N to return.", True, (0, 0, 0))
     win.blit(exit_text, (WIDTH // 2 - exit_text.get_width() // 2, HEIGHT * 0.4))
@@ -60,7 +60,7 @@ def confirm_exit():
                 if event.key == pygame.K_n:
                     waiting = False  # Return to task
 
-# Instructions Screen
+# Show Instructions Screen
 def show_instructions():
     win.fill((255, 255, 255))
     title = title_font.render("Welcome to the Stroop Task", True, (0, 0, 0))
@@ -95,46 +95,6 @@ def show_instructions():
                 if event.key == pygame.K_ESCAPE:
                     confirm_exit()
 
-# Practice round with feedback
-def practice_round():
-    font = get_scaled_font(int(HEIGHT * 0.2))  # Make words large
-    for _ in range(5):
-        word = random.choice(list(COLORS.keys()))  # Word displayed
-        color_name, color_rgb = random.choice(list(COLORS.items()))  # Ink color
-
-        win.fill((255, 255, 255))
-        text = font.render(word, True, color_rgb)
-        win.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
-        pygame.display.flip()
-        
-        response = None
-        while response is None:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    quit_game()
-                if event.type == pygame.KEYDOWN:
-                    if event.key in KEYS:
-                        response = KEYS[event.key]
-                        correct = response == color_name  # Compare response to the color name
-                        
-                        # Show feedback
-                        feedback_text = "Correct!" if correct else "Wrong!"
-                        feedback_color = (0, 200, 0) if correct else (200, 0, 0)
-                        feedback = small_font.render(feedback_text, True, feedback_color)
-                        win.blit(feedback, (WIDTH // 2 - feedback.get_width() // 2, HEIGHT * 0.8))
-                        pygame.display.flip()
-                        time.sleep(1)  # Show feedback for 1 second
-                        break
-                    if event.key == pygame.K_ESCAPE:
-                        confirm_exit()
-        pygame.time.delay(500)
-
-    win.fill((255, 255, 255))
-    transition_text = small_font.render("Practice over. The real task starts now!", True, (0, 0, 0))
-    win.blit(transition_text, (WIDTH // 2 - transition_text.get_width() // 2, HEIGHT // 2))
-    pygame.display.flip()
-    time.sleep(2)
-
 # Generate balanced Stroop trials
 def generate_trials(num_trials=50):
     trials = []
@@ -155,21 +115,66 @@ def generate_trials(num_trials=50):
 # Store results
 results = []
 
-# Show instructions
+# Run Instructions Page First
 show_instructions()
 
-# Run practice round
+# Run Practice Round
+def practice_round():
+    font = get_scaled_font(int(HEIGHT * 0.2))  # Large words
+    for _ in range(5):
+        word = random.choice(list(COLORS.keys()))
+        color_name, color_rgb = random.choice(list(COLORS.items()))
+
+        win.fill((255, 255, 255))
+        text = font.render(word, True, color_rgb)
+        win.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+        pygame.display.flip()
+        
+        response = None
+        while response is None:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit_game()
+                if event.type == pygame.KEYDOWN:
+                    if event.key in KEYS:
+                        response = KEYS[event.key]
+                        correct = response == color_name  # Compare response to color name
+                        
+                        # Show feedback
+                        feedback_text = "Correct!" if correct else "Wrong!"
+                        feedback_color = (0, 200, 0) if correct else (200, 0, 0)
+                        feedback = small_font.render(feedback_text, True, feedback_color)
+                        win.blit(feedback, (WIDTH // 2 - feedback.get_width() // 2, HEIGHT * 0.8))
+                        pygame.display.flip()
+                        time.sleep(1)  # Show feedback for 1 second
+
+                        # Blank white screen after response
+                        win.fill((255, 255, 255))
+                        pygame.display.flip()
+                        time.sleep(1)
+
+                        break
+                    if event.key == pygame.K_ESCAPE:
+                        confirm_exit()
+        pygame.time.delay(500)
+
+    win.fill((255, 255, 255))
+    transition_text = small_font.render("Practice over. The real task starts now!", True, (0, 0, 0))
+    win.blit(transition_text, (WIDTH // 2 - transition_text.get_width() // 2, HEIGHT // 2))
+    pygame.display.flip()
+    time.sleep(2)
+
 practice_round()
 
 # Start the real Stroop task
 trials = generate_trials()
 trial_index = 0
-font = get_scaled_font(int(HEIGHT * 0.2))  # Ensure large words
+font = get_scaled_font(int(HEIGHT * 0.2))  # Large words
 
 while trial_index < len(trials):
     word, color_rgb, correct_color_name, congruent = trials[trial_index]
     
-    win.fill((255, 255, 255))
+    win.fill((255, 255, 255))  # Keep background white
     text = font.render(word, True, color_rgb)
     win.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
     pygame.display.flip()
@@ -184,21 +189,16 @@ while trial_index < len(trials):
             if event.type == pygame.KEYDOWN:
                 if event.key in KEYS:
                     response = KEYS[event.key]
-                    reaction_time = time.time() - start_time
-                    accuracy = 1 if response == correct_color_name else 0  # Compare response to color name
-                    results.append([trial_index + 1, word, correct_color_name, congruent, response, reaction_time, accuracy])
-                    trial_index += 1
                     break
                 if event.key == pygame.K_ESCAPE:
                     confirm_exit()
     
-    pygame.time.delay(500)
+    # **Blank white screen after response**
+    win.fill((255, 255, 255))  
+    pygame.display.flip()
+    time.sleep(1)
 
-# Save results
-with open("stroop_results.csv", "w", newline="") as file:
-    writer = csv.writer(file)
-    writer.writerow(["Trial", "Word", "Color", "Congruent", "Response", "ReactionTime", "Accuracy"])
-    writer.writerows(results)
+    pygame.time.delay(500)  # Small delay before next trial
 
 # Quit pygame
 quit_game()
