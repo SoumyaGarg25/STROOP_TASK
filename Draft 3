@@ -12,7 +12,7 @@ WIDTH, HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
 win = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("Stroop Task")
 
-# Define colors (Improved Yellow for Better Contrast)
+# Define colors (Lemon Yellow for Better Contrast)
 COLORS = {
     "RED": (255, 0, 0),
     "GREEN": (0, 200, 0),
@@ -42,7 +42,7 @@ def quit_game():
 
 # Quit confirmation screen
 def confirm_exit():
-    win.fill((255, 255, 255))
+    win.fill((255, 255, 255))  # White background instead of black
     exit_text = title_font.render("Are you sure you want to exit?", True, (255, 0, 0))
     small_text = small_font.render("Press Y to exit, N to return.", True, (0, 0, 0))
     win.blit(exit_text, (WIDTH // 2 - exit_text.get_width() // 2, HEIGHT * 0.4))
@@ -60,7 +60,7 @@ def confirm_exit():
                 if event.key == pygame.K_n:
                     waiting = False  # Return to task
 
-# Instructions Screen
+# Show Instructions Screen
 def show_instructions():
     win.fill((255, 255, 255))
     title = title_font.render("Welcome to the Stroop Task", True, (0, 0, 0))
@@ -95,7 +95,30 @@ def show_instructions():
                 if event.key == pygame.K_ESCAPE:
                     confirm_exit()
 
-# Practice round with feedback
+# Generate balanced Stroop trials
+def generate_trials(num_trials=50):
+    trials = []
+    half_trials = num_trials // 2
+
+    for _ in range(half_trials):
+        word = random.choice(list(COLORS.keys()))
+        trials.append((word, COLORS[word], word, True))  # Congruent (word = color)
+
+    for _ in range(half_trials):
+        word = random.choice(list(COLORS.keys()))
+        incongruent_color = random.choice([name for name in COLORS.keys() if name != word])
+        trials.append((word, COLORS[incongruent_color], incongruent_color, False))  # Incongruent
+
+    random.shuffle(trials)
+    return trials
+
+# Store results
+results = []
+
+# Run Instructions Page First
+show_instructions()
+
+# Run Practice Round
 def practice_round():
     font = get_scaled_font(int(HEIGHT * 0.2))  # Large words
     for _ in range(5):
@@ -125,10 +148,10 @@ def practice_round():
                         pygame.display.flip()
                         time.sleep(1)  # Show feedback for 1 second
 
-                        # Black screen transition after response
-                        win.fill((0, 0, 0))
+                        # Blank white screen after response
+                        win.fill((255, 255, 255))
                         pygame.display.flip()
-                        time.sleep(0.5)
+                        time.sleep(1)
 
                         break
                     if event.key == pygame.K_ESCAPE:
@@ -141,30 +164,6 @@ def practice_round():
     pygame.display.flip()
     time.sleep(2)
 
-# Generate balanced Stroop trials
-def generate_trials(num_trials=50):
-    trials = []
-    half_trials = num_trials // 2
-
-    for _ in range(half_trials):
-        word = random.choice(list(COLORS.keys()))
-        trials.append((word, COLORS[word], word, True))  # Congruent (word = color)
-
-    for _ in range(half_trials):
-        word = random.choice(list(COLORS.keys()))
-        incongruent_color = random.choice([name for name in COLORS.keys() if name != word])
-        trials.append((word, COLORS[incongruent_color], incongruent_color, False))  # Incongruent
-
-    random.shuffle(trials)
-    return trials
-
-# Store results
-results = []
-
-# Show instructions
-show_instructions()
-
-# Run practice round
 practice_round()
 
 # Start the real Stroop task
@@ -175,7 +174,7 @@ font = get_scaled_font(int(HEIGHT * 0.2))  # Large words
 while trial_index < len(trials):
     word, color_rgb, correct_color_name, congruent = trials[trial_index]
     
-    win.fill((255, 255, 255))
+    win.fill((255, 255, 255))  # Keep background white
     text = font.render(word, True, color_rgb)
     win.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
     pygame.display.flip()
@@ -194,12 +193,12 @@ while trial_index < len(trials):
                 if event.key == pygame.K_ESCAPE:
                     confirm_exit()
     
-    # Black screen after response
-    win.fill((0, 0, 0))
+    # **Blank white screen after response**
+    win.fill((255, 255, 255))  
     pygame.display.flip()
-    time.sleep(0.5)
+    time.sleep(1)
 
-    pygame.time.delay(500)
+    pygame.time.delay(500)  # Small delay before next trial
 
 # Quit pygame
 quit_game()
